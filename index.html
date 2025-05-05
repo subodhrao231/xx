@@ -28,23 +28,33 @@
 </head>
 <body>
     <div id="game-container">
-        <iframe id="game-frame" src="https://multimovies.media/" allowfullscreen></iframe>
+        <iframe id="game-frame" src="https://multimovies.media/" sandbox="allow-scripts allow-same-origin" allowfullscreen></iframe>
     </div>
 
     <script>
-        // Block common ad domains
+        // Enhanced ad blocking
         const adDomains = [
             'doubleclick.net',
             'googleads.g.doubleclick.net',
             'googlesyndication.com',
             'adservice.google.com',
             'ads.playgama.com',
-            'adserver.playgama.com'
+            'adserver.playgama.com',
+            'popads.net',
+            'propellerads.com',
+            'adcash.com',
+            'popundernet.com',
+            'adblade.com',
+            'revcontent.com',
+            'outbrain.com',
+            'taboola.com',
+            'multimovies.media/ad',
+            'adnetwork'
         ];
         
-        // Block ads by intercepting requests
+        // Block fetch requests
         if (window.Proxy) {
-            window.originalFetch = window.fetch;
+            const originalFetch = window.fetch;
             window.fetch = new Proxy(window.fetch, {
                 apply: function(target, thisArg, args) {
                     const url = args[0];
@@ -56,6 +66,59 @@
                 }
             });
         }
+
+        // Block XMLHttpRequest
+        const originalXHR = window.XMLHttpRequest;
+        window.XMLHttpRequest = function() {
+            const xhr = new originalXHR();
+            const originalOpen = xhr.open;
+            xhr.open = function(method, url) {
+                if (typeof url === 'string' && adDomains.some(domain => url.includes(domain))) {
+                    console.log('Blocked XHR ad request to:', url);
+                    throw new Error('Ad blocked');
+                }
+                return originalOpen.apply(this, arguments);
+            };
+            return xhr;
+        };
+
+        // Prevent window.open (common for popunders)
+        window.open = function() {
+            console.log('Blocked popup/popunder attempt');
+            return null;
+        };
+
+        // Block common popunder techniques
+        window.addEventListener('blur', function() {
+            if(document.activeElement === document.getElementById('game-frame')) {
+                window.focus();
+            }
+        });
+
+        // MutationObserver to detect and remove ad elements
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.innerHTML && adDomains.some(domain => node.innerHTML.includes(domain))) {
+                                node.remove();
+                                console.log('Removed ad element');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Sandbox the iframe more aggressively
+        document.getElementById('game-frame').setAttribute('sandbox', 
+            'allow-scripts allow-same-origin allow-forms allow-pointer-lock');
     </script>
 </body>
 </html>
