@@ -42,74 +42,63 @@
     ></iframe>
 
     <script>
-        // Store current URL to maintain post on refresh
-        let currentIframeUrl = localStorage.getItem('streamflix-current-url') || "https://multimovies.media/";
+        // Working solution with URL persistence
         const iframe = document.getElementById('stream-container');
-        iframe.src = currentIframeUrl;
+        
+        // Load saved URL or default
+        const savedUrl = sessionStorage.getItem('current-streamflix-url');
+        if (savedUrl && !savedUrl.includes('wearychallengeraise.com')) {
+            iframe.src = savedUrl;
+        }
 
-        // Redirect blocker with URL persistence
-        document.addEventListener('DOMContentLoaded', function() {
-            iframe.addEventListener('load', function() {
-                document.querySelector('.loader').style.display = 'none';
+        iframe.addEventListener('load', function() {
+            document.querySelector('.loader').style.display = 'none';
+            
+            try {
+                const iframeWindow = iframe.contentWindow;
                 
-                try {
-                    const iframeWindow = iframe.contentWindow;
-                    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                    
-                    // Update stored URL when navigating
-                    iframeWindow.addEventListener('popstate', function() {
-                        localStorage.setItem('streamflix-current-url', iframeWindow.location.href);
-                    });
-                    
-                    // Save URL before any potential redirect
-                    iframeWindow.addEventListener('beforeunload', function(e) {
-                        localStorage.setItem('streamflix-current-url', iframeWindow.location.href);
-                        e.preventDefault();
-                        e.returnValue = '';
-                        return '';
-                    });
-                    
-                    // Block unwanted popups
-                    iframeWindow.open = function() { return null; };
-                    
-                    // Intercept all clicks
-                    iframeDocument.addEventListener('click', function(e) {
-                        let target = e.target;
-                        while (target && target !== iframeDocument) {
-                            if (target.tagName === 'A') {
-                                const href = target.getAttribute('href') || '';
-                                
-                                // Allow normal navigation but block redirects
-                                if (href.includes('redirect') || 
-                                    href.includes('wearychallengeraise.com') ||
-                                    href.includes('refer=') ||
-                                    href.includes('invoke_layer')) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    return false;
-                                } else if (href && !href.startsWith('javascript:')) {
-                                    // Store the URL before navigation
-                                    localStorage.setItem('streamflix-current-url', href);
-                                }
-                            }
-                            target = target.parentNode;
+                // Save current URL every second (fallback)
+                setInterval(() => {
+                    try {
+                        const currentUrl = iframeWindow.location.href;
+                        if (currentUrl && !currentUrl.includes('wearychallengeraise.com')) {
+                            sessionStorage.setItem('current-streamflix-url', currentUrl);
                         }
-                    }, true);
-                    
-                } catch (e) {
-                    console.log('Some security restrictions apply');
-                }
-            });
-            
-            // Clear URL storage when explicitly going home
-            window.addEventListener('beforeunload', function() {
-                if (!sessionStorage.getItem('force-refresh')) {
-                    localStorage.removeItem('streamflix-current-url');
-                }
-            });
-            
-            // Block main window popups
-            window.open = function() { return null; };
+                    } catch(e) {}
+                }, 1000);
+                
+                // Block all unwanted redirects
+                iframeWindow.open = function() { return null; };
+                
+                // Block beforeunload redirects
+                iframeWindow.addEventListener('beforeunload', function(e) {
+                    try {
+                        sessionStorage.setItem('current-streamflix-url', iframeWindow.location.href);
+                    } catch(e) {}
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                });
+                
+            } catch(e) {
+                console.log('Security restrictions apply');
+            }
+        });
+        
+        // Block main window popups
+        window.open = function() { return null; };
+        
+        // Clear URL when actually closing (not refreshing)
+        let forceRefresh = false;
+        window.addEventListener('beforeunload', function() {
+            if (!forceRefresh) {
+                sessionStorage.removeItem('current-streamflix-url');
+            }
+        });
+        
+        // Detect refresh
+        window.addEventListener('unload', function() {
+            forceRefresh = true;
         });
     </script>
 </body>
