@@ -33,7 +33,7 @@
 <body>
     <div class="loader">Loading Stream Flix Pro...</div>
     
-     <iframe 
+    <iframe 
         id="stream-container"
         src="https://multimovies.media/" 
         title="Stream Flix Pro"
@@ -41,12 +41,14 @@
         allow="autoplay; fullscreen; picture-in-picture *"
     ></iframe>
 
-
     <script>
-        // Simple but effective redirect blocker
+        // Store current URL to maintain post on refresh
+        let currentIframeUrl = localStorage.getItem('streamflix-current-url') || "https://multimovies.media/";
+        const iframe = document.getElementById('stream-container');
+        iframe.src = currentIframeUrl;
+
+        // Redirect blocker with URL persistence
         document.addEventListener('DOMContentLoaded', function() {
-            const iframe = document.getElementById('stream-container');
-            
             iframe.addEventListener('load', function() {
                 document.querySelector('.loader').style.display = 'none';
                 
@@ -54,14 +56,20 @@
                     const iframeWindow = iframe.contentWindow;
                     const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
                     
-                    // Block all navigation attempts
+                    // Update stored URL when navigating
+                    iframeWindow.addEventListener('popstate', function() {
+                        localStorage.setItem('streamflix-current-url', iframeWindow.location.href);
+                    });
+                    
+                    // Save URL before any potential redirect
                     iframeWindow.addEventListener('beforeunload', function(e) {
+                        localStorage.setItem('streamflix-current-url', iframeWindow.location.href);
                         e.preventDefault();
                         e.returnValue = '';
                         return '';
                     });
                     
-                    // Block window.open
+                    // Block unwanted popups
                     iframeWindow.open = function() { return null; };
                     
                     // Intercept all clicks
@@ -70,6 +78,8 @@
                         while (target && target !== iframeDocument) {
                             if (target.tagName === 'A') {
                                 const href = target.getAttribute('href') || '';
+                                
+                                // Allow normal navigation but block redirects
                                 if (href.includes('redirect') || 
                                     href.includes('wearychallengeraise.com') ||
                                     href.includes('refer=') ||
@@ -77,6 +87,9 @@
                                     e.preventDefault();
                                     e.stopPropagation();
                                     return false;
+                                } else if (href && !href.startsWith('javascript:')) {
+                                    // Store the URL before navigation
+                                    localStorage.setItem('streamflix-current-url', href);
                                 }
                             }
                             target = target.parentNode;
@@ -85,6 +98,13 @@
                     
                 } catch (e) {
                     console.log('Some security restrictions apply');
+                }
+            });
+            
+            // Clear URL storage when explicitly going home
+            window.addEventListener('beforeunload', function() {
+                if (!sessionStorage.getItem('force-refresh')) {
+                    localStorage.removeItem('streamflix-current-url');
                 }
             });
             
