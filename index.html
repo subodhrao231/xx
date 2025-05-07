@@ -42,63 +42,66 @@
     ></iframe>
 
     <script>
-        // Working solution with URL persistence
-        const iframe = document.getElementById('stream-container');
-        
-        // Load saved URL or default
-        const savedUrl = sessionStorage.getItem('current-streamflix-url');
-        if (savedUrl && !savedUrl.includes('wearychallengeraise.com')) {
-            iframe.src = savedUrl;
-        }
-
-        iframe.addEventListener('load', function() {
-            document.querySelector('.loader').style.display = 'none';
+        // Redirect protection without sandbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const iframe = document.getElementById('stream-container');
             
-            try {
-                const iframeWindow = iframe.contentWindow;
+            iframe.addEventListener('load', function() {
+                document.querySelector('.loader').style.display = 'none';
                 
-                // Save current URL every second (fallback)
-                setInterval(() => {
-                    try {
-                        const currentUrl = iframeWindow.location.href;
-                        if (currentUrl && !currentUrl.includes('wearychallengeraise.com')) {
-                            sessionStorage.setItem('current-streamflix-url', currentUrl);
+                try {
+                    const iframeWindow = iframe.contentWindow;
+                    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Block suspicious redirects
+                    const originalPushState = iframeWindow.history.pushState;
+                    iframeWindow.history.pushState = function(state, title, url) {
+                        if (url && shouldBlockUrl(url)) {
+                            console.log('Blocked pushState to:', url);
+                            return;
                         }
-                    } catch(e) {}
-                }, 1000);
-                
-                // Block all unwanted redirects
-                iframeWindow.open = function() { return null; };
-                
-                // Block beforeunload redirects
-                iframeWindow.addEventListener('beforeunload', function(e) {
-                    try {
-                        sessionStorage.setItem('current-streamflix-url', iframeWindow.location.href);
-                    } catch(e) {}
-                    e.preventDefault();
-                    e.returnValue = '';
-                    return '';
-                });
-                
-            } catch(e) {
-                console.log('Security restrictions apply');
-            }
-        });
-        
-        // Block main window popups
-        window.open = function() { return null; };
-        
-        // Clear URL when actually closing (not refreshing)
-        let forceRefresh = false;
-        window.addEventListener('beforeunload', function() {
-            if (!forceRefresh) {
-                sessionStorage.removeItem('current-streamflix-url');
-            }
-        });
-        
-        // Detect refresh
-        window.addEventListener('unload', function() {
-            forceRefresh = true;
+                        return originalPushState.apply(this, arguments);
+                    };
+                    
+                    // Intercept link clicks
+                    iframeDocument.addEventListener('click', function(e) {
+                        let target = e.target;
+                        while (target && target !== iframeDocument) {
+                            if (target.tagName === 'A') {
+                                const href = target.getAttribute('href') || '';
+                                if (shouldBlockUrl(href)) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('Blocked navigation to:', href);
+                                    return false;
+                                }
+                            }
+                            target = target.parentNode;
+                        }
+                    }, true);
+                    
+                    function shouldBlockUrl(url) {
+                        const blockedPatterns = [
+                            'wearychallengeraise.com',
+                            'redirect',
+                            'refer=',
+                            'invoke_layer',
+                            'popunder',
+                            'popup',
+                            'advert'
+                        ];
+                        return blockedPatterns.some(pattern => 
+                            url.toString().toLowerCase().includes(pattern.toLowerCase())
+                        );
+                    }
+                    
+                } catch (e) {
+                    console.log('Security restrictions prevented some protections');
+                }
+            });
+            
+            // Block main window popups
+            window.open = function() { return null; };
         });
     </script>
 </body>
