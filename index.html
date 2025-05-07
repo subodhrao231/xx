@@ -1,204 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Ad-Free Embed</title>
+    <title>Stream Flix Pro</title>
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
+            height: 100%;
             overflow: hidden;
             background: #000;
         }
-        #secure-frame {
+        #stream-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             border: none;
-            z-index: 1;
         }
-        #protection-overlay {
+        .loader {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 9999;
-            pointer-events: none;
-        }
-        #block-counter {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: #0f0;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 10000;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
         }
     </style>
 </head>
 <body>
-    <iframe id="secure-frame" src="https://multimovies.media/" allow="fullscreen"></iframe>
-    <div id="protection-overlay"></div>
-    <div id="block-counter">Ads blocked: 0</div>
+    <div class="loader">Loading Stream Flix Pro...</div>
+    
+    <iframe 
+        id="stream-container"
+        src="https://multimovies.media/" 
+        title="Stream Flix Pro"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
+        allowfullscreen
+        allow="autoplay; fullscreen; picture-in-picture"
+    ></iframe>
 
     <script>
-        // Enhanced protection system
-        let blockCount = 0;
-        const updateCounter = () => {
-            document.getElementById('block-counter').textContent = `Ads blocked: ${blockCount}`;
-        };
-
-        // 1. Nuclear option for popunders - disable window.open completely
-        window.open = function() {
-            blockCount++;
-            updateCounter();
-            console.log('[🔴 BLOCKED] Popunder attempt');
-            return null;
-        };
-
-        // 2. Super aggressive focus protection
-        let lastFocusTime = Date.now();
-        window.addEventListener('blur', () => {
-            if (Date.now() - lastFocusTime < 100) {
-                window.focus();
-                blockCount++;
-                updateCounter();
-                console.log('[🔴 BLOCKED] Popunder focus steal');
-            }
-            lastFocusTime = Date.now();
-        });
-
-        // 3. Redirect killer - prevents all iframe-initiated navigation
-        window.addEventListener('beforeunload', (e) => {
-            if (document.activeElement === document.getElementById('secure-frame')) {
-                e.preventDefault();
-                blockCount++;
-                updateCounter();
-                console.log('[🔴 BLOCKED] Redirect attempt');
-                return e.returnValue = 'Blocked unwanted navigation';
-            }
-        });
-
-        // 4. Frame busting protection
-        if (window.top !== window.self) {
-            window.top.location = window.self.location;
-        }
-
-        // 5. Ad network request blocker
-        const adDomains = [
-            'popads.net', 'propellerads.com', 'adcash.com',
-            'popundernet.com', 'revcontent.com', 'outbrain.com',
-            'taboola.com', 'mgid.com', 'monadplug.com',
-            'clickadu.com', 'adskeeper.com', 'adsterra.com',
-            'exoclick.com', 'zeropark.com', 'adblade.com',
-            'adnow.com', 'adf.ly', 'bc.vc',
-            'shorte.st', 'linkshrink.net', 'adfocus.io',
-            'multiads.com', 'adnetwork.com', 'adprovider.com'
-        ];
-
-        // 6. Request interception
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            const url = args[0]?.url || args[0];
-            if (typeof url === 'string' && adDomains.some(d => url.includes(d))) {
-                blockCount++;
-                updateCounter();
-                console.log('[🔴 BLOCKED] Ad network request:', url);
-                return Promise.reject('Ad request blocked');
-            }
-            return originalFetch.apply(this, args);
-        };
-
-        // 7. XHR interception
-        const originalXHR = window.XMLHttpRequest;
-        window.XMLHttpRequest = class extends originalXHR {
-            open(method, url) {
-                if (typeof url === 'string' && adDomains.some(d => url.includes(d))) {
-                    blockCount++;
-                    updateCounter();
-                    console.log('[🔴 BLOCKED] Ad XHR request:', url);
-                    throw new Error('Ad request blocked');
-                }
-                super.open(method, url);
-            }
-        };
-
-        // 8. DOM-based ad removal
-        const observer = new MutationObserver(mutations => {
-            mutations.forEach(mutation => {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1) {
-                        // Check for ad attributes
-                        const adSignals = [
-                            'data-ad', 'data-ad-client', 'data-ad-slot',
-                            'data-ad-width', 'data-ad-format', 'data-ad-manager',
-                            'id="ad-', 'class*="ad"', 'class*="ads"'
-                        ];
-                        
-                        if (adSignals.some(signal => 
-                            node.hasAttribute(signal) || 
-                            (node.id && node.id.includes('ad')) ||
-                            (node.className && node.className.toLowerCase().includes('ad')))
-                        {
-                            node.remove();
-                            blockCount++;
-                            updateCounter();
-                            console.log('[🔴 BLOCKED] Ad element removed:', node);
+        // Simple but effective redirect blocker
+        document.addEventListener('DOMContentLoaded', function() {
+            const iframe = document.getElementById('stream-container');
+            
+            iframe.addEventListener('load', function() {
+                document.querySelector('.loader').style.display = 'none';
+                
+                try {
+                    const iframeWindow = iframe.contentWindow;
+                    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Block all navigation attempts
+                    iframeWindow.addEventListener('beforeunload', function(e) {
+                        e.preventDefault();
+                        e.returnValue = '';
+                        return '';
+                    });
+                    
+                    // Block window.open
+                    iframeWindow.open = function() { return null; };
+                    
+                    // Intercept all clicks
+                    iframeDocument.addEventListener('click', function(e) {
+                        let target = e.target;
+                        while (target && target !== iframeDocument) {
+                            if (target.tagName === 'A') {
+                                const href = target.getAttribute('href') || '';
+                                if (href.includes('redirect') || 
+                                    href.includes('wearychallengeraise.com') ||
+                                    href.includes('refer=') ||
+                                    href.includes('invoke_layer')) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    return false;
+                                }
+                            }
+                            target = target.parentNode;
                         }
-                    }
-                });
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['id', 'class', 'data-ad']
-        });
-
-        // 9. Continuous iframe monitoring
-        setInterval(() => {
-            document.querySelectorAll('iframe').forEach(frame => {
-                if (frame.id !== 'secure-frame') {
-                    frame.remove();
-                    blockCount++;
-                    updateCounter();
-                    console.log('[🔴 BLOCKED] Unauthorized iframe removed');
+                    }, true);
+                    
+                } catch (e) {
+                    console.log('Some security restrictions apply');
                 }
             });
-        }, 500);
-
-        // 10. Script injection blocking
-        const originalCreateElement = document.createElement;
-        document.createElement = function(tagName, options) {
-            const element = originalCreateElement.call(this, tagName, options);
-            if (tagName.toLowerCase() === 'script') {
-                const originalSrc = Object.getOwnPropertyDescriptor(element, 'src');
-                Object.defineProperty(element, 'src', {
-                    set: function(value) {
-                        if (typeof value === 'string' && adDomains.some(d => value.includes(d))) {
-                            blockCount++;
-                            updateCounter();
-                            console.log('[🔴 BLOCKED] Ad script injection:', value);
-                            return;
-                        }
-                        originalSrc.set.call(this, value);
-                    }
-                });
-            }
-            return element;
-        };
-
-        console.log('🛡️ Ultimate ad blocker activated!');
+            
+            // Block main window popups
+            window.open = function() { return null; };
+        });
     </script>
 </body>
 </html>
