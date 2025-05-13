@@ -2,229 +2,189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="frame-src https://userrr4591.ifrem.net; child-src 'none';">
-    <title>Premium Live Stream</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Thumbnail Downloader</title>
     <style>
-        :root {
-            --primary: #113ccf;
-            --secondary: #d82d8e;
-            --accent: #ff9e40;
-            --dark: #0f172a;
-            --light: #f8fafc;
-            --text: #e2e8f0;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
         body {
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--dark);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        
-        /* Header with left logo */
-        .magic-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 0.8rem 1rem;
-            display: flex;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.4);
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        
-        .header-logo {
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        nav {
+            margin-bottom: 20px;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
             display: flex;
-            align-items: center;
+            justify-content: center;
+        }
+
+        nav li {
+            margin: 0 10px;
+        }
+
+        nav a {
             text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
         }
-        
-        .logo-img {
-            height: 30px;
+
+        #logoContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #logo {
+            max-width: 100%;
+            height: auto;
             margin-right: 10px;
         }
-        
-        .logo-text {
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            background: linear-gradient(to right, #fff 20%, var(--accent) 40%, var(--accent) 60%, #fff 80%);
-            background-size: 200% auto;
-            color: #000;
-            background-clip: text;
-            -webkit-background-clip: text;
-            text-fill-color: transparent;
-            -webkit-text-fill-color: transparent;
-            animation: shine 3s linear infinite;
+
+        p {
+            margin-bottom: 10px;
         }
-        
-        /* Secure iframe container */
-        .secure-video-container {
-            position: relative;
+
+        input[type="text"] {
             width: 100%;
-            padding-top: 56.25%;
-            overflow: hidden;
-            background: #000;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
-        
-        .secure-video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
             border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
-        
-        /* Content section */
-        .content-section {
-            padding: 1rem;
-            background: rgba(15, 23, 42, 0.9);
-            margin: 0.75rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+
+        button:hover {
+            background-color: #0056b3;
         }
-        
-        .content-section h2 {
-            color: var(--accent);
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0.6rem;
-        }
-        
-        .content-section p {
-            font-size: 0.8rem;
-            font-weight: 400;
-            margin-bottom: 0.6rem;
-            line-height: 1.5;
-        }
-        
-        /* Footer */
-        .magic-footer {
-            background: linear-gradient(135deg, var(--dark), #1e293b);
-            padding: 1rem;
+
+        #adSpaceTop,
+        #adSpaceMiddle,
+        #adSpaceBottom {
             text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin: 20px 0;
+            /* Add any additional styling for your ad spaces here */
         }
-        
-        .copyright {
-            font-size: 0.7rem;
-            opacity: 0.6;
-            font-weight: 400;
+
+        #thumbnailLinkAbove,
+        #thumbnailLinkBelow {
+            text-align: center;
+            margin: 20px 0;
         }
-        
-        /* Animations */
-        @keyframes shine {
-            to { background-position: 200% center; }
-        }
-        
-        /* Mobile optimizations */
-        @media (max-width: 480px) {
-            .logo-text {
-                font-size: 1.1rem;
-            }
-            
-            .logo-img {
-                height: 25px;
-            }
-            
-            .content-section {
-                padding: 0.8rem;
-                margin: 0.5rem;
-            }
-            
-            .content-section h2 {
-                font-size: 0.95rem;
-            }
-            
-            .content-section p {
-                font-size: 0.78rem;
-            }
+
+        #thumbnailContainer img {
+            max-width: 100%;
+            display: block;
+            margin: 20px 0;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
-    <!-- Header with left logo -->
-    <header class="magic-header">
-        <a href="#" class="header-logo">
-            <!-- Replace with your logo -->
-            <img src="logo.png" alt="Logo" class="logo-img">
-            <div class="logo-text">MagicTV</div>
-        </a>
-    </header>
-    
-    <!-- Secure iframe container -->
-    <div class="secure-video-container">
-        <!-- Secured iframe with strict sandboxing -->
-        <iframe src="https://userrr4591.ifrem.net/iframe/frame.php" 
-                frameborder="0"
-                sandbox="allow-same-origin allow-scripts"
-                allowfullscreen
-                id="secureFrame"></iframe>
-    </div>
-    
-    <!-- Content section -->
-    <div class="content-section">
-        <h2>Live Streaming</h2>
-        <p>Enjoy our premium live stream with complete security. All external links are disabled for your protection.</p>
-    </div>
-    
-    <!-- Footer -->
-    <footer class="magic-footer">
-        <div class="copyright">
-            &copy; 2023 Secure Stream. All rights reserved.
+    <header>
+        <!-- Logo and Menu Container -->
+        <div id="logoContainer">
+            <!-- Add your logo image here -->
+            <img id="logo" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjBysPlyhSK-c34z54Ca5GBTjjnBGQbI4_O5slFNlM_Y24nnAXBQwojevN9ScJwTklbZHlsZcMCAOFvYtMXo7YQZRAVLbzulCvWeSAQsgwgyWY5bnT6EAOGBTw3ugv7pzOleehLCZfHKL1E0LCV_0SweQrZMDnTJoHLy7cU2JNhqMbpjpzLaeslp34XlUw/s1600/Screenshot%202023-12-20%20at%205.31.38%20PM.png" alt="Youtube thumbnail Downloader">
+
+            <!-- Navigation Menu -->
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="https://youtube-thumbnail-downloaderzz.blogspot.com/p/privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="#about">Contact</a></li>
+                    <!-- Add more menu items as needed -->
+                </ul>
+            </nav>
         </div>
-    </footer>
 
-    <!-- Security scripts without window.open override -->
+        <h1>YouTube Video Thumbnail Downloader</h1>
+    </header>
+
+    <!-- Ad Space: Insert your ad code for the top position here -->
+    <div id="adSpaceTop">
+        <!-- Insert your ad code here -->
+        <p>This is an ad space. Insert your ad code here.</p>
+    </div>
+
+    <p>Download youtube and vimeo thumbnail images of all quality for free. This application let you download thumbnails of all quality. Just paste the URL of the thumbnail video in the below input and click Get Thumbnail Image. Enter a valid YouTube video URL below and click the "Show & Download Thumbnail" button:</p>
+    <input type="text" id="videoUrl" placeholder="Enter YouTube video URL">
+    <button onclick="showThumbnail()">Show & Download Thumbnail</button>
+    <div id="thumbnailLinkAbove"></div>
+    <div id="thumbnailContainer"></div>
+    <div id="thumbnailLinkBelow"></div>
+
+    <!-- Ad Space: Insert your ad code for the middle position here -->
+    <div id="adSpaceMiddle">
+        <!-- Insert your ad code here -->
+        <p>This is an ad space. Insert your ad code here.</p>
+    </div>
+<h2>What is Youtube Thumbnail</h2>
+ <p> Content
+  Content
+  Content</p>
+  
+    <!-- Ad Space: Insert your ad code for the bottom position here -->
+    <div id="adSpaceBottom">
+        <!-- Insert your ad code here -->
+        <p>This is an ad space. Insert your ad code here.</p>
+    </div>
+
     <script>
-        // Strict iframe security
-        document.getElementById('secureFrame').addEventListener('load', function() {
-            // Block all links within iframe
-            try {
-                var iframeDoc = this.contentDocument || this.contentWindow.document;
-                iframeDoc.addEventListener('click', function(e) {
-                    if (e.target.tagName === 'A' || e.target.closest('a')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                    }
-                }, true);
-                
-                // Prevent any form submissions
-                iframeDoc.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    return false;
-                }, true);
-            } catch(e) {
-                // Cross-origin error handling
-                console.log('Security policies active');
-            }
-        });
+        function showThumbnail() {
+            // Get the YouTube video URL
+            const videoUrl = document.getElementById('videoUrl').value;
 
-        // Prevent navigation
-        window.addEventListener('beforeunload', function(e) {
-            // Only prevent if not initiated by user
-            if (!e.defaultPrevented && e.type === 'beforeunload') {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
+            // Regular expression to extract the video ID from the URL
+            const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = videoUrl.match(regex);
 
-        // Block frame busting
-        if (window.top !== window.self) {
-            window.top.location = window.self.location;
+            if (match) {
+                const videoId = match[1];
+                const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
+                // Display the thumbnail image
+                const thumbnailContainer = document.getElementById('thumbnailContainer');
+                thumbnailContainer.innerHTML = `<img src="${thumbnailUrl}" alt="Video Thumbnail">`;
+
+                // Provide download links
+                const thumbnailLinkAbove = document.getElementById('thumbnailLinkAbove');
+                const thumbnailLinkBelow = document.getElementById('thumbnailLinkBelow');
+
+                thumbnailLinkAbove.innerHTML = `<p><a href="${thumbnailUrl}" download>Download Thumbnail (Above)</a></p>`;
+                thumbnailLinkBelow.innerHTML = `<p><a href="${thumbnailUrl}" download>Download Thumbnail (Below)</a></p>`;
+
+            } else {
+                alert('Invalid YouTube video URL. Please enter a valid URL.');
+            }
         }
     </script>
 </body>
